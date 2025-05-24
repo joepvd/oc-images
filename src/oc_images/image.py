@@ -1,37 +1,50 @@
 from oc_images.util import run
 
-class Image():
-    def __init__(self, name: str = '', pullspec: str = '', commit: str = '', repo: str = ''):
+
+class Image:
+    def __init__(
+        self, name: str = "", pullspec: str = "", commit: str = "", repo: str = ""
+    ):
         self.name = name
         self.pullspec = pullspec
         self._commit = commit
         self._repo = repo
-        
-        self._version: str = ''
-        self._nvr: str = ''
-        self._component: str = ''
-        self._release: str = ''
-        self._release_operator: str = ''
+
+        self._version: str = ""
+        self._nvr: str = ""
+        self._component: str = ""
+        self._release: str = ""
+        self._release_operator: str = ""
 
     def __repr__(self):
-        return f'{self.__class__!s}({self.__dict__})'
+        return f"{self.__class__!s}({self.__dict__})"
 
     def __str__(self):
-        return f'{self.name}: {self.pullspec}'
+        return f"{self.name}: {self.pullspec}"
 
     def obtain_info(self):
-        cmd = ['oc', 'image', 'info', '-o', 'json', self.pullspec]
+        cmd = ["oc", "image", "info", "-o", "json", self.pullspec]
         info = run(cmd)
-        labels = info['config']['config']['Labels']
-        self._version = labels.get('version', labels.get('org.opencontainers.image.version'))
-        self._release = labels.get('release', labels.get('coreos.build.manifest-list-tag'))
-        self._commit = labels.get('io.openshift.build.commit.id', labels.get('org.opencontainers.image.revision'))
-        self._component = labels.get('com.redhat.component', 'rhel-coreos')
-        self._repo = labels.get('io.openshift.build.source-location', labels.get('org.opencontainers.image.source'))
+        labels = info["config"]["config"]["Labels"]
+        self._version = labels.get(
+            "version", labels.get("org.opencontainers.image.version")
+        )
+        self._release = labels.get(
+            "release", labels.get("coreos.build.manifest-list-tag")
+        )
+        self._commit = labels.get(
+            "io.openshift.build.commit.id",
+            labels.get("org.opencontainers.image.revision"),
+        )
+        self._component = labels.get("com.redhat.component", "rhel-coreos")
+        self._repo = labels.get(
+            "io.openshift.build.source-location",
+            labels.get("org.opencontainers.image.source"),
+        )
         self._release_operator = False
-        if 'io.openshift.release.operator' in labels:
+        if "io.openshift.release.operator" in labels:
             self._release_operator = True
-        self._nvr = f'{self._component}-{self._version}-{self._release}'
+        self._nvr = f"{self._component}-{self._version}-{self._release}"
 
     @property
     def nvr(self):

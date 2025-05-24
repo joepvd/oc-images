@@ -1,10 +1,10 @@
-from oc_images.imagecollection import ImageCollection
-
 from rich.console import Console
 from rich.table import Table
 
+from oc_images.imagecollection import ImageCollection
 
-class Comparer():
+
+class Comparer:
     def __init__(self, first, second):
         self.first = ImageCollection(first)
         self.second = ImageCollection(second)
@@ -20,32 +20,36 @@ class Comparer():
         first_names = set(self.first.images.keys())
         second_names = set(self.second.images.keys())
 
-        self.namediff.update({
-            self.first.name: first_names - second_names,
-            self.second.name: second_names - first_names,
-        })
+        self.namediff.update(
+            {
+                self.first.name: first_names - second_names,
+                self.second.name: second_names - first_names,
+            }
+        )
         self.common_names = first_names & second_names
 
     def gen_payload_diff(self):
         for name in self.common_names:
             if self.first.images[name].pullspec != self.second.images[name].pullspec:
-                self.nvrdiff.append({
-                    'name': name,
-                    'first': self.first.images[name].nvr,
-                    'second': self.second.images[name].nvr,
-                })
+                self.nvrdiff.append(
+                    {
+                        "name": name,
+                        "first": self.first.images[name].nvr,
+                        "second": self.second.images[name].nvr,
+                    }
+                )
 
     def report_nvrdiff(self):
         if not self.nvrdiff:
-            self.console.print(':tada: SHAs are all the same :tada:')
+            self.console.print(":tada: SHAs are all the same :tada:")
             return
 
         table = Table(show_header=True, header_style="bold magenta")
-        table.title = '\n\nEnlisting difference NVRs'
+        table.title = "\n\nEnlisting difference NVRs"
         table.add_column(self.first.name)
         table.add_column(self.second.name)
         for entry in self.nvrdiff:
-            table.add_row(entry['first'], entry['second'])
+            table.add_row(entry["first"], entry["second"])
         self.console.print(table)
 
     def report_name_diff(self):
@@ -54,9 +58,8 @@ class Comparer():
                 continue
 
             table = Table(show_header=True, header_style="bold magenta", min_width=50)
-            table.title = f'\n\nOnly in {name}'
-            table.add_column('Payload name')
+            table.title = f"\n\nOnly in {name}"
+            table.add_column("Payload name")
             for image in extra:
                 table.add_row(image)
             self.console.print(table)
-

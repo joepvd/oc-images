@@ -1,5 +1,6 @@
-import subprocess
 import json
+import subprocess
+
 
 def run(cmd):
     result = subprocess.run(cmd, capture_output=True, text=True)
