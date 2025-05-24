@@ -1,0 +1,35 @@
+[project]
+name = "oc-images"
+version = "0.1.0"
+description = "List info and diffs from payload images and imagestreams"
+readme = "README.md"
+authors = [
+    { name = "Joep van Delft", email = "jdelft@redhat.com" }
+]
+requires-python = ">=3.11"
+dependencies = [
+    "click>=8.2.1",
+    "rich>=14.0.0",
+]
+
+[project.scripts]
+oc-images = "oc_images.cli:images"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3.5",
+    "ruff>=0.11.11",
+]
+
+[tool.pytest.ini_options]
+addopts = "--verbose --color=yes"
+testpaths = [
+    "tests",
+]
+markers = [
+    "functional: Run tests that reach out to the internet",
+]
