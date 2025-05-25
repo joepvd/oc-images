@@ -36,3 +36,4 @@ testpaths = [
 markers = [
     "functional: Run tests that reach out to the internet",
 ]
+asyncio_default_fixture_loop_scope = "function"

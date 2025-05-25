@@ -10,7 +10,7 @@ help:
 	@echo "format: Run formatter"
 
 .PHONY: test
-test: venv unit lint check-format integration
+test: venv lint check-format all-tests
 
 .PHONY: venv
 venv: .venv/bin/python
@@ -35,11 +35,16 @@ check-format:
 
 .PHONY: unit
 unit:
-	uv run pytest -m 'not functional'
+	uv run coverage run -m pytest -m 'not functional'
 
 .PHONY: integration
 integration:
-	uv run pytest -m 'functional'
+	uv run coverage run -m pytest -m 'functional'
+
+.PHONY: all-tests
+all-tests:
+	uv run coverage run -m pytest
+	coverage report -m
 
 .PHONY: clean
 clean:
