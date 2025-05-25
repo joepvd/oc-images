@@ -7,7 +7,11 @@ import pytest
 pytest_plugins = ("pytest_asyncio",)
 
 from oc_images.image import Image
-from oc_images.imagecollection import CollectionType, ImageCollection
+from oc_images.imagecollection import (
+    CollectionType,
+    ImageCollection,
+    assembly_to_imagestream,
+)
 
 istream = CollectionType.IMAGESTREAM
 payload = CollectionType.PAYLOAD
@@ -25,6 +29,19 @@ payload = CollectionType.PAYLOAD
 )
 def test_determine_type(name, kind):
     assert ImageCollection(name).type == kind
+
+
+@pytest.mark.parametrize(
+    ("assembly", "imagestream"),
+    [
+        ("4.5.6", "ocp/4.5-art-assembly-4.5.6"),
+        ("4.25.0-ec.7", "ocp/4.25-art-assembly-4.25.0-ec.7"),
+        ("4.18-stream", "ocp/4.18-art-latest"),
+        ("4.18-art456", "ocp/4.18-art-assembly-art456"),
+    ],
+)
+def test_assembly_to_imagestream(assembly, imagestream):
+    assert assembly_to_imagestream(assembly) == imagestream
 
 
 @pytest.fixture

@@ -12,7 +12,6 @@ class TestCliList:
             images,
             [
                 "list",
-                "--nvr",
                 "--name",
                 "ironic",
                 "quay.io/openshift-release-dev/ocp-release:4.20.0-ec.0-x86_64",
@@ -30,7 +29,6 @@ class TestCliList:
             images,
             [
                 "list",
-                "--nvr",
                 "--filter",
                 "ovn",
                 "quay.io/openshift-release-dev/ocp-release:4.20.0-ec.0-x86_64",
@@ -57,10 +55,24 @@ class TestCliList:
             in result.output
         )
 
+    def test_list_assembly_and_collection(self):
+        runner = CliRunner()
+        result = runner.invoke(
+            images, ["list", "--assembly", "4.48.98", "quay.io/payload"]
+        )
+        assert result.exit_code != 0
+        assert "Only one of assembly and collection can be specified" in result.output
+
+    def test_list_neither_assembly_collection(self):
+        runner = CliRunner()
+        result = runner.invoke(images, ["list"])
+        assert result.exit_code != 0
+        assert "Must have one of assembly or collection" in result.output
+
     def test_list_is(self):
         runner = CliRunner()
         result = runner.invoke(
-            images, ["list", "--nvr", "--name", "ironic", "4.13-art-assembly-4.13.29"]
+            images, ["list", "--name", "ironic", "4.13-art-assembly-4.13.29"]
         )
         assert result.exit_code == 0
         assert (
@@ -71,7 +83,7 @@ class TestCliList:
     def test_list_is_s390x(self):
         runner = CliRunner()
         result = runner.invoke(
-            images, ["list", "--nvr", "--name", "ironic", "ocp-s390x/4.18.10"]
+            images, ["list", "--name", "ironic", "ocp-s390x/4.18.10"]
         )
         assert result.exit_code == 0
         # This is no error, ironic has no s390x build
@@ -86,7 +98,6 @@ class TestCliList:
             images,
             [
                 "list",
-                "--nvr",
                 "--name",
                 "cli",
                 "ocp-s390x/4.18-art-assembly-4.18.10-s390x",
@@ -101,7 +112,8 @@ class TestCliList:
     def test_list_is_sha(self):
         runner = CliRunner()
         result = runner.invoke(
-            images, ["list", "4.18-art-assembly-4.18.3", "--name", "installer"]
+            images,
+            ["list", "4.18-art-assembly-4.18.3", "--name", "installer", "--pullspec"],
         )
         assert result.exit_code == 0
         assert (
@@ -115,6 +127,7 @@ class TestCliList:
             images,
             [
                 "list",
+                "--pullspec",
                 "quay.io/openshift-release-dev/ocp-release:4.18.3-x86_64",
                 "--name",
                 "installer",
@@ -123,6 +136,18 @@ class TestCliList:
         assert result.exit_code == 0
         assert (
             "ocp-v4.0-art-dev@sha256:4e672082ec967a9de7d149cf5cd7cbd4036425806d75ec6762b974bb3ae26d6d"
+            in result.output
+        )
+
+    def test_list_assembly(self):
+        runner = CliRunner()
+        result = runner.invoke(
+            images,
+            ["list", "--assembly", "4.18.5", "--name", "kube-rbac-proxy"],
+        )
+        assert result.exit_code == 0
+        assert (
+            "kube-rbac-proxy-container-v4.18.0-202502250302.p0.g526498a.assembly.stream.el9"
             in result.output
         )
 

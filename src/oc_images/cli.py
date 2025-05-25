@@ -4,13 +4,12 @@ from functools import update_wrapper
 import click
 
 from oc_images.comparer import Comparer
-from oc_images.imagecollection import ImageCollection
+from oc_images.imagecollection import ImageCollection, assembly_to_imagestream
 
 
 def click_coroutine(f):
     """A wrapper to allow to use asyncio with click.
-    https://github.com/pallets/click/issues/85
-    """
+    https://github.com/pallets/click/issues/85"""
 
     def wrapper(*args, **kwargs):
         loop = asyncio.get_event_loop()
@@ -31,35 +30,42 @@ def images(debug):
 @images.command("list")
 @click.option("--filter", "-f", help="filter by payload name")
 @click.option("--name", "-n", multiple=True, help="Report on exact payload names")
-@click.option("--nvr", help="output by nvr", is_flag=True)
-@click.argument("collection")
+@click.option("--pullspec", "-p", is_flag=True, help="Return pullspec rather than nvr")
+@click.option("--assembly", "-a", help="Look at x86_64 imagestream of assembly")
+@click.argument("collection", required=False)
 @click_coroutine
-async def list_collection(collection, filter, nvr, name):
+async def list_collection(
+    filter: str, name: list, pullspec: str, assembly: str, collection: str = ""
+):
     """\
     List contents of image stream or payload
-      oc images list --filter ironic
-    """
+      oc images list --filter ironic"""
+
     if filter and name:
         raise click.BadParameter("Filter and name cannot both be specified")
+    if assembly and collection:
+        raise click.BadParameter("Only one of assembly and collection can be specified")
+    if not assembly and not collection:
+        raise click.BadParameter("Must have one of assembly or collection")
+
+    if assembly:
+        collection = assembly_to_imagestream(assembly)
+
     ic = ImageCollection(collection)
     images = await ic.images()
-    to_report = {}
+    to_report = []
     for tag, image in images.items():
         if filter and filter not in tag:
             continue
         elif name and tag not in name:
             continue
-        to_report[tag] = image
+        to_report.append(image)
 
-    if not nvr:
-        for image in to_report.values():
-            print(image)
-        # print('\n'.join(to_report.values()))
+    if pullspec:
+        print("\n".join([f"{i.name} {i.pullspec}" for i in to_report]))
         return
 
-    tasks = []
-    for image in to_report.values():
-        tasks.append(asyncio.create_task(image.nvr()))
+    tasks = [asyncio.create_task(image.nvr()) for image in to_report]
     result = await asyncio.gather(*tasks)
     print("\n".join(result))
 
@@ -72,6 +78,7 @@ async def diff(collection):
     Show differences between two payload/imagestreams
     """
     comparer = Comparer(*collection)
+
     await comparer.gen_name_diff()
     await comparer.gen_payload_diff()
 

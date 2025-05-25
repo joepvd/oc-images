@@ -1,3 +1,4 @@
+import re
 from enum import Enum
 
 from oc_images.image import Image
@@ -7,6 +8,20 @@ from oc_images.util import run
 class CollectionType(Enum):
     PAYLOAD = 1
     IMAGESTREAM = 2
+
+
+def assembly_to_imagestream(assembly):
+    components = [
+        re.search(r"^[0-9]+\.[0-9]+", assembly)[0],
+        "art",
+        "latest" if "stream" in assembly else "assembly",
+    ]
+    if "stream" not in assembly:
+        name = assembly
+        if result := re.search(r"art[0-9]+$", assembly):
+            name = result[0]
+        components.append(name)
+    return f"ocp/{'-'.join(components)}"
 
 
 class ImageCollection:
