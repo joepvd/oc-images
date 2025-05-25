@@ -30,14 +30,17 @@ class Comparer:
 
     def gen_payload_diff(self):
         for name in self.common_names:
-            if self.first.images[name].pullspec != self.second.images[name].pullspec:
-                self.nvrdiff.append(
-                    {
-                        "name": name,
-                        "first": self.first.images[name].nvr,
-                        "second": self.second.images[name].nvr,
-                    }
-                )
+            first = self.first.images[name]
+            second = self.first.images[name]
+            if first.pullspec == second.pullspec:
+                continue
+            self.nvrdiff.append(
+                {
+                    "name": name,
+                    "first": first.nvr,
+                    "second": second.nvr,
+                }
+            )
 
     def report_nvrdiff(self):
         if not self.nvrdiff:
