@@ -22,9 +22,9 @@ class Image:
     def __str__(self):
         return f"{self.name}: {self.pullspec}"
 
-    def obtain_info(self):
+    async def obtain_info(self):
         cmd = ["oc", "image", "info", "-o", "json", self.pullspec]
-        info = run(cmd)
+        info = await run(cmd)
         labels = info["config"]["config"]["Labels"]
         self._version = labels.get(
             "version", labels.get("org.opencontainers.image.version")
@@ -46,38 +46,32 @@ class Image:
             self._release_operator = True
         self._nvr = f"{self._component}-{self._version}-{self._release}"
 
-    @property
-    def nvr(self):
+    async def nvr(self):
         if not self._nvr:
-            self.obtain_info()
+            await self.obtain_info()
         return self._nvr
 
-    @property
-    def version(self):
+    async def version(self):
         if not self._version:
-            self.obtain_info()
+            await self.obtain_info()
         return self._version
 
-    @property
-    def release(self):
+    async def release(self):
         if not self._release:
-            self.obtain_info()
+            await self.obtain_info()
         return self._release
 
-    @property
-    def commit(self):
+    async def commit(self):
         if not self._commit:
-            self.obtain_info()
+            await self.obtain_info()
         return self._commit
 
-    @property
-    def component(self):
+    async def component(self):
         if not self._component:
-            self.obtain_info()
+            await self.obtain_info()
         return self._component
 
-    @property
-    def release_operator(self):
+    async def release_operator(self):
         if not self._release_operator:
-            self.obtain_info()
+            await self.obtain_info()
         return self._release_operator

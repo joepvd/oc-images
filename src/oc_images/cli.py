@@ -1,7 +1,22 @@
+import asyncio
+from functools import update_wrapper
+
 import click
 
 from oc_images.comparer import Comparer
 from oc_images.imagecollection import ImageCollection
+
+
+def click_coroutine(f):
+    """A wrapper to allow to use asyncio with click.
+    https://github.com/pallets/click/issues/85
+    """
+
+    def wrapper(*args, **kwargs):
+        loop = asyncio.get_event_loop()
+        return loop.run_until_complete(f(*args, **kwargs))
+
+    return update_wrapper(wrapper, f)
 
 
 @click.group()
@@ -18,7 +33,8 @@ def images(debug):
 @click.option("--name", "-n", multiple=True, help="Report on exact payload names")
 @click.option("--nvr", help="output by nvr", is_flag=True)
 @click.argument("collection")
-def list_collection(collection, filter, nvr, name):
+@click_coroutine
+async def list_collection(collection, filter, nvr, name):
     """\
     List contents of image stream or payload
       oc images list --filter ironic
@@ -26,26 +42,38 @@ def list_collection(collection, filter, nvr, name):
     if filter and name:
         raise click.BadParameter("Filter and name cannot both be specified")
     ic = ImageCollection(collection)
-    for tag, image in ic.images.items():
+    images = await ic.images()
+    to_report = {}
+    for tag, image in images.items():
         if filter and filter not in tag:
             continue
-        if name and tag not in name:
+        elif name and tag not in name:
             continue
-        if nvr:
-            print(image.nvr)
-        else:
+        to_report[tag] = image
+
+    if not nvr:
+        for image in to_report.values():
             print(image)
+        # print('\n'.join(to_report.values()))
+        return
+
+    tasks = []
+    for image in to_report.values():
+        tasks.append(asyncio.create_task(image.nvr()))
+    result = await asyncio.gather(*tasks)
+    print("\n".join(result))
 
 
 @images.command()
 @click.argument("collection", nargs=2)
-def diff(collection):
+@click_coroutine
+async def diff(collection):
     """\
     Show differences between two payload/imagestreams
     """
     comparer = Comparer(*collection)
-    comparer.gen_name_diff()
-    comparer.gen_payload_diff()
+    await comparer.gen_name_diff()
+    await comparer.gen_payload_diff()
 
-    comparer.report_nvrdiff()
+    await comparer.report_nvrdiff()
     comparer.report_name_diff()

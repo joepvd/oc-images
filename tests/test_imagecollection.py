@@ -4,6 +4,8 @@ from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 
+pytest_plugins = ("pytest_asyncio",)
+
 from oc_images.image import Image
 from oc_images.imagecollection import CollectionType, ImageCollection
 
@@ -22,7 +24,7 @@ payload = CollectionType.PAYLOAD
     ],
 )
 def test_determine_type(name, kind):
-    assert ImageCollection(name).determine_type() == kind
+    assert ImageCollection(name).type == kind
 
 
 @pytest.fixture
@@ -40,22 +42,25 @@ def imagestream():
 
 @patch("oc_images.imagecollection.ImageCollection.get_payload_images")
 @patch("oc_images.imagecollection.ImageCollection.get_is_images")
-def test_images_p(get_is_images, get_payload_images, payload_image):
-    payload_image.images
+@pytest.mark.asyncio
+async def test_images_p(get_is_images, get_payload_images, payload_image):
+    await payload_image.images()
     get_payload_images.assert_called()
     get_is_images.assert_not_called()
 
 
 @patch("oc_images.imagecollection.ImageCollection.get_payload_images")
 @patch("oc_images.imagecollection.ImageCollection.get_is_images")
-def test_images_i(get_is_images, get_payload_images, imagestream):
-    imagestream.images
+@pytest.mark.asyncio
+async def test_images_i(get_is_images, get_payload_images, imagestream):
+    await imagestream.images()
     get_payload_images.assert_not_called()
     get_is_images.assert_called()
 
 
-def test_get_payload_images(payload_image):
-    images = payload_image.get_payload_images()
+@pytest.mark.asyncio
+async def test_get_payload_images(payload_image):
+    images = await payload_image.get_payload_images()
     assert "agent-installer-orchestrator" in images
     assert isinstance(images["ironic"], Image)
     assert images["oc-mirror"].commit

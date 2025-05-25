@@ -1,3 +1,6 @@
+import asyncio
+
+from rich import print
 from rich.console import Console
 from rich.table import Table
 
@@ -16,41 +19,55 @@ class Comparer:
         self.namediff: dict() = {}
         self.common_names: set() = {}
 
-    def gen_name_diff(self):
-        first_names = set(self.first.images.keys())
-        second_names = set(self.second.images.keys())
+    async def gen_name_diff(self):
+        result = await asyncio.gather(
+            asyncio.create_task(self.first.images()),
+            asyncio.create_task(self.second.images()),
+        )
+        first_names = set(result[0].keys())
+        second_names = set(result[1].keys())
 
         self.namediff.update(
             {
-                self.first.name: first_names - second_names,
-                self.second.name: second_names - first_names,
+                await self.first.name(): first_names - second_names,
+                await self.second.name(): second_names - first_names,
             }
         )
         self.common_names = first_names & second_names
 
-    def gen_payload_diff(self):
+    async def gen_payload_diff(self):
+        first_images = await self.first.images()
+        second_images = await self.second.images()
+
+        async def create_entry(name, first, second):
+            result = await asyncio.gather(
+                asyncio.create_task(first.nvr()),
+                asyncio.create_task(second.nvr()),
+            )
+            return {
+                "name": name,
+                "first": result[0],
+                "second": result[1],
+            }
+
+        tasks = []
         for name in self.common_names:
-            first = self.first.images[name]
-            second = self.first.images[name]
+            first = first_images[name]
+            second = second_images[name]
             if first.pullspec == second.pullspec:
                 continue
-            self.nvrdiff.append(
-                {
-                    "name": name,
-                    "first": first.nvr,
-                    "second": second.nvr,
-                }
-            )
+            tasks.append(asyncio.create_task(create_entry(name, first, second)))
+        self.nvrdiff = await asyncio.gather(*tasks)
 
-    def report_nvrdiff(self):
+    async def report_nvrdiff(self):
         if not self.nvrdiff:
             self.console.print(":tada: SHAs are all the same :tada:")
             return
 
         table = Table(show_header=True, header_style="bold magenta")
         table.title = "\n\nEnlisting difference NVRs"
-        table.add_column(self.first.name)
-        table.add_column(self.second.name)
+        table.add_column(await self.first.name())
+        table.add_column(await self.second.name())
         for entry in self.nvrdiff:
             table.add_row(entry["first"], entry["second"])
         self.console.print(table)

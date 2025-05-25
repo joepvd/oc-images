@@ -1,10 +1,13 @@
+import asyncio
 import json
 import subprocess
 
 
-def run(cmd):
-    result = subprocess.run(cmd, capture_output=True, text=True)
-    if result.returncode != 0:
-        print(result.stderr)
-        result.check_returncode()
-    return json.loads(result.stdout)
+async def run(cmd):
+    proc = await asyncio.create_subprocess_shell(
+        " ".join(cmd), stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
+    )
+    stdout, stderr = await proc.communicate()
+    if proc.returncode != 0:
+        raise RuntimeError(f"Process {cmd} failed with error {stderr}")
+    return json.loads(stdout)
