@@ -10,7 +10,6 @@ from oc_images.image import Image
 from oc_images.imagecollection import (
     CollectionType,
     ImageCollection,
-    assembly_to_imagestream,
 )
 
 istream = CollectionType.IMAGESTREAM
@@ -25,23 +24,15 @@ payload = CollectionType.PAYLOAD
             "registry.ci.openshift.org/ocp/release:4.20.0-0.nightly-2025-05-24-021517",
             payload,
         ),
+        ("4.5.6", istream),
+        ("4.20-art-latest", istream),
+        ("ocp/4.14-art-assembly-art123", istream),
+        ("ocp-s390x/4.19-art-assembly-4.19.3-s390x", istream),
+        ("4.16-art-assembly-4.16.0-rc.2-ppc64le", istream),
     ],
 )
 def test_determine_type(name, kind):
     assert ImageCollection(name).type == kind
-
-
-@pytest.mark.parametrize(
-    ("assembly", "imagestream"),
-    [
-        ("4.5.6", "ocp/4.5-art-assembly-4.5.6"),
-        ("4.25.0-ec.7", "ocp/4.25-art-assembly-4.25.0-ec.7"),
-        ("4.18-stream", "ocp/4.18-art-latest"),
-        ("4.18-art456", "ocp/4.18-art-assembly-art456"),
-    ],
-)
-def test_assembly_to_imagestream(assembly, imagestream):
-    assert assembly_to_imagestream(assembly) == imagestream
 
 
 @pytest.fixture
@@ -84,19 +75,25 @@ async def test_get_payload_images(payload_image):
 
 
 @pytest.mark.parametrize(
-    ("imagestream", "namespace", "name"),
+    ("collection", "isname"),
     [
         (
             "ocp-s390x/4.18-art-assembly-4.18.10-s390x",
-            "ocp-s390x",
-            "4.18-art-assembly-4.18.10-s390x",
+            "ocp-s390x/4.18-art-assembly-4.18.10-s390x",
         ),
-        ("ocp-s390x/4.18.0-rc.10", "ocp-s390x", "4.18.0-rc.10"),
-        ("4.18.0-rc.10", "ocp", "4.18.0-rc.10"),
+        ("4.18-rc.10", "ocp/4.18-art-assembly-rc.10"),
+        ("4.19-rc.5", "ocp/4.19-art-assembly-rc.5"),
+        ("4.19-art-latest", "ocp/4.19-art-latest"),
+        ("4.19-art-latest-s390x", "ocp-s390x/4.19-art-latest-s390x"),
+        ("4.17-art123", "ocp/4.17-art-assembly-art123"),
+        ("4.19.3", "ocp/4.19-art-assembly-4.19.3"),
+        ("4.12-art123", "ocp/4.12-art-assembly-art123"),
+        ("4.16-stream", "ocp/4.16-art-latest"),
+        ("4.20-nightly", "ocp/4.20-art-latest"),
+        ("4.18-latest", "ocp/4.18-art-latest"),
     ],
 )
-def test_is_coordinates(imagestream, namespace, name):
-    ic = ImageCollection(imagestream)
+def test_is_coordinates(collection, isname):
+    ic = ImageCollection(collection)
     coordinates = ic.is_coordinates
-    assert coordinates["name"] == name
-    assert coordinates["namespace"] == namespace
+    assert isname == f"{coordinates['namespace']}/{coordinates['name']}"

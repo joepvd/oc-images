@@ -4,7 +4,7 @@ from functools import update_wrapper
 import click
 
 from oc_images.comparer import Comparer
-from oc_images.imagecollection import ImageCollection, assembly_to_imagestream
+from oc_images.imagecollection import ImageCollection
 
 
 def click_coroutine(f):
@@ -18,11 +18,13 @@ def click_coroutine(f):
     return update_wrapper(wrapper, f)
 
 
-@click.group()
-@click.option("--debug", is_flag=True, help="Show what is happening")
-def images(debug):
+@click.group(context_settings=dict(help_option_names=["-h", "--help"]))
+def images():
     """\
     oc images: Generate reports of imagestreams or payloads
+
+    oc images list -h
+    oc images diff -h
     """
     pass
 
@@ -31,25 +33,15 @@ def images(debug):
 @click.option("--filter", "-f", help="filter by payload name")
 @click.option("--name", "-n", multiple=True, help="Report on exact payload names")
 @click.option("--pullspec", "-p", is_flag=True, help="Return pullspec rather than nvr")
-@click.option("--assembly", "-a", help="Look at x86_64 imagestream of assembly")
-@click.argument("collection", required=False)
+@click.argument("collection")
 @click_coroutine
-async def list_collection(
-    filter: str, name: list, pullspec: str, assembly: str, collection: str = ""
-):
+async def list_collection(filter: str, name: list, pullspec: str, collection: str = ""):
     """\
     List contents of image stream or payload
       oc images list --filter ironic"""
 
     if filter and name:
         raise click.BadParameter("Filter and name cannot both be specified")
-    if assembly and collection:
-        raise click.BadParameter("Only one of assembly and collection can be specified")
-    if not assembly and not collection:
-        raise click.BadParameter("Must have one of assembly or collection")
-
-    if assembly:
-        collection = assembly_to_imagestream(assembly)
 
     ic = ImageCollection(collection)
     images = await ic.images()

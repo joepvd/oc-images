@@ -2,12 +2,12 @@
 help:
 	@echo "venv: create .venv"
 	@echo "clean: del the cruft"
+	@echo "format: Run formatter"
 	@echo "test: run linters, formatters, unit tests"
 	@echo "- unit: run unit tests"
 	@echo "- integration: run integration tests"
 	@echo "- lint: run linter"
 	@echo "- format-check: run format-check"
-	@echo "format: Run formatter"
 
 .PHONY: test
 test: venv lint check-format all-tests

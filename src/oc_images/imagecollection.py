@@ -10,20 +10,6 @@ class CollectionType(Enum):
     IMAGESTREAM = 2
 
 
-def assembly_to_imagestream(assembly):
-    components = [
-        re.search(r"^[0-9]+\.[0-9]+", assembly)[0],
-        "art",
-        "latest" if "stream" in assembly else "assembly",
-    ]
-    if "stream" not in assembly:
-        name = assembly
-        if result := re.search(r"art[0-9]+$", assembly):
-            name = result[0]
-        components.append(name)
-    return f"ocp/{'-'.join(components)}"
-
-
 class ImageCollection:
     def __init__(self, pointer):
         self.pointer: str = pointer
@@ -100,16 +86,54 @@ class ImageCollection:
 
     @property
     def is_coordinates(self):
-        if not self._is_coordinates:
-            name: str = ""
-            namespace: str = ""
+        if self._is_coordinates:
+            return self._is_coordinates
+
+        print(f"pointer: {self.pointer}")
+        self._is_coordinates = {
+            "namespace": "noname",
+            "name": "noname",
+        }
+
+        if "/" in self.pointer:
             split = self.pointer.split("/")
-            if len(split) == 1:
-                namespace = "ocp"
-                name = self.pointer
-            elif len(split) == 2:
-                namespace = split[0]
-                name = split[1]
+            namespace = split[0]
+            name = split[1]
+            self._is_coordinates = {
+                "namespace": namespace,
+                "name": name,
+            }
+        elif result := re.search(
+            r"^(?P<version>[0-9]+\.[0-9]+)\.(?P<patch>[0-9]+)$", self.pointer
+        ):
+            v = result.groupdict()
+            version = v["version"]
+            patch = v["patch"]
+            if "ec" in patch or "rc" in patch:
+                name = f"{version}-art-assembly-{patch}"
+            else:
+                name = f"{version}-art-assembly-{version}.{patch}"
+            self._is_coordinates = {
+                "namespace": "ocp",
+                "name": name,
+            }
+
+        elif result := re.search(
+            r"^(?P<version>[0-9]+\.[0-9]+)-(?P<assembly>art[0-9]+(-[\S]+)?|[er]c\.[0-9]+|((art-)?latest|nightly|stream))(?P<arch>-[\S]+)?$",
+            self.pointer,
+        ):
+            v = result.groupdict()
+            version = v["version"]
+            assembly = v["assembly"]
+            arch = v.get("arch", "")
+            namespace = f"ocp{arch}" if arch else "ocp"
+
+            if "latest" in assembly or "nightly" in assembly or "stream" in assembly:
+                name = f"{version}-art-latest"
+            else:
+                name = f"{version}-art-assembly-{assembly}"
+            if arch:
+                name = f"{name}{arch}"
             self._is_coordinates = {
                 "namespace": namespace,
                 "name": name,
