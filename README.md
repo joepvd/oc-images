@@ -70,13 +70,16 @@ quay.io/openshift-release-dev/ocp-release:4.19.0-rc.5-s390x
 ### Specify by imagestream
 These are literal imageStreams that are interpreted correctly:
 
-| argument                          | comment                                 |
-|-----------------------------------|-----------------------------------------|
-| `4.19-art-latest`                 | x86\_64 is assumed                      |
-| `ocp/4.19-art-latest`             | Explicitly specify namespace before `/` |
-| `ocp-s390x/4.19-art-latest-s390x` | Fully qualified funny arch              |
-| `4.17-art-latest-ppc64le`         | Namespace is assumed                    |
-| `4.17-art-assembly-art123`        | Custom assemblies also work             |
+| argument                                   | comment                                 |
+|--------------------------------------------|-----------------------------------------|
+| `4.19-art-latest`                          | x86\_64 is assumed                      |
+| `4.17-art-assembly-4.17-3`                 | Named assembly                          |
+| `4.17-art-assembly-4.17-3-s390x`           | Named assembly for funny arch           |
+| `ocp-arm64/4.17-art-assembly-4.17-3-arm64` | Named assembly for funny arch           |
+| `ocp/4.19-art-latest`                      | Explicitly specify namespace before `/` |
+| `ocp-s390x/4.19-art-latest-s390x`          | Fully qualified funny arch              |
+| `4.17-art-latest-ppc64le`                  | Namespace is assumed                    |
+| `4.17-art-assembly-art123`                 | Custom assemblies also work             |
 
 
 ### Specify by assembly

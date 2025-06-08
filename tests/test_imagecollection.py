@@ -91,6 +91,8 @@ async def test_get_payload_images(payload_image):
         ("4.16-stream", "ocp/4.16-art-latest"),
         ("4.20-nightly", "ocp/4.20-art-latest"),
         ("4.18-latest", "ocp/4.18-art-latest"),
+        ("4.13.1", "ocp/4.13-art-assembly-4.13.1"),
+        ("4.13-art-assembly-4.13.29", "ocp/4.13-art-assembly-4.13.29"),
     ],
 )
 def test_is_coordinates(collection, isname):

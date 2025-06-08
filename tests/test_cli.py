@@ -55,20 +55,6 @@ class TestCliList:
             in result.output
         )
 
-    def test_list_assembly_and_collection(self):
-        runner = CliRunner()
-        result = runner.invoke(
-            images, ["list", "--assembly", "4.48.98", "quay.io/payload"]
-        )
-        assert result.exit_code != 0
-        assert "Only one of assembly and collection can be specified" in result.output
-
-    def test_list_neither_assembly_collection(self):
-        runner = CliRunner()
-        result = runner.invoke(images, ["list"])
-        assert result.exit_code != 0
-        assert "Must have one of assembly or collection" in result.output
-
     def test_list_is(self):
         runner = CliRunner()
         result = runner.invoke(
@@ -143,7 +129,7 @@ class TestCliList:
         runner = CliRunner()
         result = runner.invoke(
             images,
-            ["list", "--assembly", "4.18.5", "--name", "kube-rbac-proxy"],
+            ["list", "4.18.5", "--name", "kube-rbac-proxy"],
         )
         assert result.exit_code == 0
         assert (

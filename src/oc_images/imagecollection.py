@@ -89,7 +89,6 @@ class ImageCollection:
         if self._is_coordinates:
             return self._is_coordinates
 
-        print(f"pointer: {self.pointer}")
         self._is_coordinates = {
             "namespace": "noname",
             "name": "noname",
@@ -104,7 +103,8 @@ class ImageCollection:
                 "name": name,
             }
         elif result := re.search(
-            r"^(?P<version>[0-9]+\.[0-9]+)\.(?P<patch>[0-9]+)$", self.pointer
+            r"^(?P<version>[0-9]+\.[0-9]+)(-art-assembly-(?P=version))?\.(?P<patch>[0-9]+)$",
+            self.pointer,
         ):
             v = result.groupdict()
             version = v["version"]
@@ -119,7 +119,7 @@ class ImageCollection:
             }
 
         elif result := re.search(
-            r"^(?P<version>[0-9]+\.[0-9]+)-(?P<assembly>art[0-9]+(-[\S]+)?|[er]c\.[0-9]+|((art-)?latest|nightly|stream))(?P<arch>-[\S]+)?$",
+            r"^(?P<version>[0-9]+\.[0-9]+)-(?P<assembly>art[0-9]+(-[\S]+)?|[er]c\.[0-9]+|((art-)?latest|nightly|stream|[0-9]+\.[0-9]+\.[0-9]+([er]c.[0-9]+)?))(?P<arch>-[\S]+)?$",
             self.pointer,
         ):
             v = result.groupdict()
