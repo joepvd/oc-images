@@ -15,14 +15,14 @@ through `oc`, and it is expected that oc:
 Some example use of `list`:
 
 ```
-$ oc images list ocp-s390x/4.19-art-latest-s390x --name pod --nvr
+$ oc images list ocp-s390x/4.19-art-latest-s390x --name pod
 openshift-enterprise-pod-container-v4.19.0-202505210330.p0.g375cd1b.assembly.stream.el9
 
-$ oc images list --filter ovn --nvr quay.io/openshift-release-dev/ocp-release:4.19.0-ec.4-x86_64
+$ oc images list --filter ovn quay.io/openshift-release-dev/ocp-release:4.19.0-ec.4-x86_64
 ose-ovn-kubernetes-container-v4.19.0-202503260216.p0.g12b33c1.assembly.stream.el9
 ovn-kubernetes-microshift-container-v4.19.0-202503251208.p0.g12b33c1.assembly.stream.el9
 
-$ time oc images list --nvr quay.io/openshift-release-dev/ocp-release:4.19.0-ec.4-x86_64 | wc -l
+$ time oc images list quay.io/openshift-release-dev/ocp-release:4.19.0-ec.4-x86_64 | wc -l
 189
 
 real	0m6.828s
@@ -109,8 +109,5 @@ ln -s "$(pwd)"/.venv/bin/oc-images ~/.local/bin/oc-images
 
 ## BUGS
 - rhel-coreos and rhel-coreos-extensions images are not being reported well
-- Would be nice with a helper function, so one can specify an assembly name
-  and the image stream name will be guessed
-- The report is very wide for the payload diff options. Alternative reports
-  might be helpful
-- Would be good to be able to specify other attributes for the diff
+- The report is very wide for the payload diff options.
+- CI, OKD, and Multi payloads are unexplored. Let's speak if interest!
