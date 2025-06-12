@@ -100,7 +100,13 @@ So prepend the ystream before the actual name in `releases.yml`, so that:
 
 
 ## Installation
+
+```sh
+pip install "git+https://github.com/joepvd/oc-images"
 ```
+
+Or if you want to make your local development version available globally (requires `uv`):
+```sh
 git clone https://github.com/joepvd/oc-images.git
 cd oc-images
 make venv
